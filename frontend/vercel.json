@@ -1,6 +1,3 @@
 {
-  "rewrites": [{ "source": "/(.*)", "destination": "/" }],
-  "env": {
-    "REACT_APP_API_URL": "https://your-backend-domain.vercel.app"
-  }
+  "rewrites": [{ "source": "/(.*)", "destination": "/" }]
 }
