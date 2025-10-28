@@ -3,6 +3,8 @@ const express = require("express");
 const cors = require("cors");
 const path = require("path");
 const connectDB = require("./config/db");
+import { fileURLToPath } from "url";
+const __filename = fileURLToPath(import.meta.url);
 
 const authRoutes = require("./routes/authRoutes");
 const sessionRoutes = require("./routes/sessionRoutes");
@@ -47,3 +49,10 @@ app.use("/uploads", express.static(path.join(__dirname, "uploads"), {}));
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`server running on port ${PORT}`));
+
+app.use(express.static(path.join(__dirname, "../frontend/build")));
+
+// ✅ React Router support (send all unknown routes to React)
+app.get("*", (req, res) => {
+  res.sendFile(path.join(__dirname, "../frontend/build", "index.html"));
+});
