@@ -3,8 +3,6 @@ const express = require("express");
 const cors = require("cors");
 const path = require("path");
 const connectDB = require("./config/db");
-import { fileURLToPath } from "url";
-const __filename = fileURLToPath(import.meta.url);
 
 const authRoutes = require("./routes/authRoutes");
 const sessionRoutes = require("./routes/sessionRoutes");
@@ -17,6 +15,7 @@ const {
 
 const app = express();
 
+// Disable caching
 app.disable("etag");
 app.use((req, res, next) => {
   res.set("Cache-Control", "no-store, no-cache, must-revalidate, private");
@@ -25,34 +24,42 @@ app.use((req, res, next) => {
   next();
 });
 
+// CORS configuration
 app.use(
   cors({
-    origin: "*",
+    origin: process.env.FRONTEND_URL || "*",
     methods: ["GET", "POST", "PUT", "DELETE"],
-    allowedHeaders: ["Content-Type", "Authorization"], // important fix
+    allowedHeaders: ["Content-Type", "Authorization"],
     credentials: true,
   })
 );
 
+// Connect to database
 connectDB();
 
+// Body parser
 app.use(express.json());
 
+// API Routes
 app.use("/api/auth", authRoutes);
 app.use("/api/sessions", sessionRoutes);
 app.use("/api/questions", questionsRoutes);
-
 app.use("/api/ai/generate-questions", protect, generateInterviewQuestions);
 app.use("/api/ai/generate-explanation", protect, generateConceptExplanation);
 
-app.use("/uploads", express.static(path.join(__dirname, "uploads"), {}));
+// Serve uploaded files
+app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
+// Serve static files from React build (only in production)
+if (process.env.NODE_ENV === "production") {
+  app.use(express.static(path.join(__dirname, "../frontend/build")));
+
+  // React Router support - send all unknown routes to React
+  app.get("*", (req, res) => {
+    res.sendFile(path.join(__dirname, "../frontend/build", "index.html"));
+  });
+}
+
+// Start server
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => console.log(`server running on port ${PORT}`));
-
-app.use(express.static(path.join(__dirname, "../frontend/build")));
-
-// ✅ React Router support (send all unknown routes to React)
-app.get("*", (req, res) => {
-  res.sendFile(path.join(__dirname, "../frontend/build", "index.html"));
-});
+app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
