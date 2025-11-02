@@ -40,6 +40,15 @@ connectDB();
 // Body parser
 app.use(express.json());
 
+// Health check
+app.get("/", (req, res) => {
+  res.json({
+    message: "API is running",
+    status: "healthy",
+    timestamp: new Date().toISOString(),
+  });
+});
+
 // API Routes
 app.use("/api/auth", authRoutes);
 app.use("/api/sessions", sessionRoutes);
@@ -50,15 +59,10 @@ app.use("/api/ai/generate-explanation", protect, generateConceptExplanation);
 // Serve uploaded files
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
-// Serve static files from React build (only in production)
-if (process.env.NODE_ENV === "production") {
-  app.use(express.static(path.join(__dirname, "../frontend/build")));
-
-  // React Router support - send all unknown routes to React
-  app.get("*", (req, res) => {
-    res.sendFile(path.join(__dirname, "../frontend/build", "index.html"));
-  });
-}
+// 404 handler for API routes
+app.use((req, res) => {
+  res.status(404).json({ error: "Route not found" });
+});
 
 // Start server
 const PORT = process.env.PORT || 5000;
